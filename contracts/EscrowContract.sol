@@ -127,6 +127,12 @@ contract EscrowContract is
         complianceManager = ComplianceManager(_complianceManager);
         treasury = msg.sender; // Default treasury to admin
         feePercentage = 50;    // Default 0.5% fee (50 basis points)
+        
+        // Calculate minimum escrow amount dynamically based on fee percentage
+        // For 50 basis points (0.5%), minimum = ceil(10000 / 50) = 200
+        // This ensures (amount * 50) / 10000 >= 1
+        minimumEscrowAmount = (10000 + feePercentage - 1) / feePercentage;
+        
         arbitratorsRegistry = ArbitratorsRegistry(_arbitratorsRegistry);
     }
     
@@ -149,18 +155,46 @@ contract EscrowContract is
         require(_feePercentage <= 1000, "Fee cannot exceed 10%"); // Max 10% fee
         uint256 oldFee = feePercentage;
         feePercentage = _feePercentage;
+        
+        // Dynamically update minimum escrow amount to ensure fee > 0
+        // Calculate: minimumAmount = ceil(10000 / feePercentage)
+        // This ensures (minimumAmount * feePercentage) / 10000 >= 1
+        if (_feePercentage > 0) {
+            minimumEscrowAmount = (10000 + _feePercentage - 1) / _feePercentage;
+        } else {
+            minimumEscrowAmount = 1; // If no fee, minimum is 1
+        }
+        
         emit FeePercentageUpdated(oldFee, _feePercentage);
+        emit MinimumEscrowAmountUpdated(oldFee > 0 ? (10000 + oldFee - 1) / oldFee : 1, minimumEscrowAmount);
     }
 
     /**
      * @notice Set the minimum escrow amount to prevent zero-fee edge cases
      * @param _minimumEscrowAmount Minimum amount required to create an escrow
+     * @dev This will be overridden if it's less than the calculated minimum based on fee percentage
      */
     function setMinimumEscrowAmount(uint256 _minimumEscrowAmount) external onlyAdmin {
         require(_minimumEscrowAmount > 0, "Minimum amount must be > 0");
+        
+        // Calculate the absolute minimum based on current fee percentage
+        uint256 calculatedMinimum = feePercentage > 0 ? (10000 + feePercentage - 1) / feePercentage : 1;
+        
+        // Ensure the new minimum is at least the calculated minimum
+        require(_minimumEscrowAmount >= calculatedMinimum, "Minimum too low for current fee");
+        
         uint256 oldMinimum = minimumEscrowAmount;
         minimumEscrowAmount = _minimumEscrowAmount;
         emit MinimumEscrowAmountUpdated(oldMinimum, _minimumEscrowAmount);
+    }
+    
+    /**
+     * @notice Get the calculated minimum escrow amount based on current fee percentage
+     * @return The minimum amount required to ensure fee > 0
+     */
+    function getCalculatedMinimumAmount() external view returns (uint256) {
+        if (feePercentage == 0) return 1;
+        return (10000 + feePercentage - 1) / feePercentage;
     }
 
     /*//////////////////////////////////////////////////////////////
