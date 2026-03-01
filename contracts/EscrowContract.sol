@@ -335,7 +335,10 @@ contract EscrowContract is
 
     function _payout(address to, address token, uint256 amount) internal {
         if (token == address(0)) {
-            payable(to).transfer(amount);
+            // Use .call() instead of .transfer() to support smart contract wallets
+            // .transfer() has a 2300 gas limit which fails for contracts with fallback logic
+            (bool success, ) = payable(to).call{value: amount}("");
+            require(success, "ETH transfer failed");
         } else {
             IERC20(token).safeTransfer(to, amount);
         }
