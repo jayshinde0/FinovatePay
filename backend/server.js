@@ -22,6 +22,7 @@ const listenForTokenization = require("./listeners/contractListener");
 const startComplianceListeners = require("./listeners/complianceListener");
 const testDbConnection = require("./utils/testDbConnection");
 const { startSyncWorker } = require("./services/escrowSyncService");
+const { startScheduledReconciliation } = require("./services/reconciliationService");
 
 const app = express();
 const server = http.createServer(app);
@@ -118,6 +119,10 @@ app.use("/api/auctions", require("./routes/auction"));
 /* ---------------- ANALYTICS ---------------- */
 
 app.use('/api/analytics', require('./routes/analytics'));
+
+/* ---------------- RECONCILIATION ---------------- */
+
+app.use('/api/reconciliation', require('./routes/reconciliation'));
 
 /* ---------------- CURRENCIES ---------------- */
 
@@ -242,6 +247,17 @@ try {
 } catch (err) {
   console.error(
     "[server] Compliance listeners failed:",
+    err?.message || err
+  );
+}
+
+// Start scheduled reconciliation (every 6 hours)
+try {
+  startScheduledReconciliation();
+  console.log("[Server] Reconciliation scheduler started");
+} catch (err) {
+  console.error(
+    "[server] Reconciliation scheduler failed:",
     err?.message || err
   );
 }
