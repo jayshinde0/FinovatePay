@@ -87,6 +87,13 @@ app.use("/api/health", require("./routes/health"));
 app.use("/api/auth", authLimiter, require("./routes/auth"));
 app.use("/api/invoices", require("./routes/invoice"));
 app.use("/api/payments", paymentLimiter, require("./routes/payment"));
+
+/* ---------------- ESCROW ---------------- */
+
+app.use("/api/escrow", require("./routes/escrow"));
+
+/* ---------------- ADMIN ---------------- */
+
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/kyc", kycLimiter, require("./routes/kyc"));
 app.use("/api/produce", require("./routes/produce"));

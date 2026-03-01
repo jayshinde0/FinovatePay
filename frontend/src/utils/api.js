@@ -331,6 +331,23 @@ export const raiseDispute = (invoiceId, reason) => {
   return api.post('/payments/escrow/dispute', { invoiceId, reason });
 };
 
+// --- Multi-Signature Escrow API ---
+
+// Add multi-signature approval for an escrow
+export const approveMultiSig = (invoiceId) => {
+  return api.post(`/escrow/${invoiceId}/approve`);
+};
+
+// Get multi-signature approval status for an escrow
+export const getMultiSigApprovals = (invoiceId) => {
+  return api.get(`/escrow/${invoiceId}/approvals`);
+};
+
+// Get full escrow status including multi-sig details
+export const getEscrowStatus = (invoiceId) => {
+  return api.get(`/escrow/${invoiceId}/status`);
+};
+
 // --- KYC API ---
 export const verifyKYC = (userData) => {
   return api.post('/kyc/verify', userData);
