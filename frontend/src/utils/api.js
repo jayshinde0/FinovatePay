@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { toast } from 'sonner';
+import { checkOnlineStatus } from './network';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 console.log("API Base URL:", API_BASE_URL);
@@ -14,6 +15,13 @@ export const setNavigateFunction = (navigate) => {
 // Create axios instance with default config
 // withCredentials: true ensures cookies are sent with requests
 export const api = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true,
+});
+
+// Raw axios instance without interceptors for logout requests
+// This prevents recursive 401 loops when logout endpoint also returns 401
+const rawAxios = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
 });
@@ -41,8 +49,9 @@ api.interceptors.response.use(
         });
       }
       
-      // Check if user is offline
-      if (!navigator.onLine) {
+      // Check if user is offline using robust connectivity detection
+      const isOnline = await checkOnlineStatus();
+      if (!isOnline) {
         console.error('User is offline');
         const message = 'You are offline. Please check your internet connection.';
         toast.error(message);
@@ -79,9 +88,10 @@ api.interceptors.response.use(
         });
         
       case 401:
-        // Call backend logout to clear HttpOnly cookie, then clear localStorage
+        // Call backend logout to clear HttpOnly cookie using raw axios (without interceptor)
+        // to prevent recursive 401 loops if logout endpoint also returns 401
         try {
-          await api.post('/auth/logout');
+          await rawAxios.post('/auth/logout');
         } catch (logoutError) {
           console.error('Logout request failed:', logoutError);
         }
