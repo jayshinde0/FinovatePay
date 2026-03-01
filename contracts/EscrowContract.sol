@@ -93,6 +93,7 @@ contract EscrowContract is
     event TreasuryUpdated(address indexed oldTreasury, address indexed newTreasury);
     event FeePercentageUpdated(uint256 oldFee, uint256 newFee);
     event MinimumEscrowAmountUpdated(uint256 oldMinimum, uint256 newMinimum);
+    event EscrowExpired(bytes32 indexed invoiceId, address indexed buyer, uint256 amountReclaimed);
 
     modifier onlyAdmin() {
         require(_msgSender() == admin, "Not admin");
@@ -265,6 +266,10 @@ contract EscrowContract is
         Escrow storage escrow = escrows[_invoiceId];
         require(_msgSender() == escrow.buyer, "Not buyer");
         require(!escrow.buyerConfirmed, "Already paid");
+        require(escrow.status == EscrowStatus.Created, "Invalid escrow status");
+        
+        // Check if escrow has expired
+        require(block.timestamp <= escrow.expiresAt, "Escrow expired");
 
         uint256 payableAmount = _getPayableAmount(escrow);
 
@@ -291,6 +296,13 @@ contract EscrowContract is
             _msgSender() == escrow.seller || _msgSender() == escrow.buyer,
             "Not party"
         );
+        require(escrow.status == EscrowStatus.Funded, "Not funded");
+        
+        // Allow release even if expired (parties can still complete the transaction)
+        // But update status to Expired if past deadline
+        if (block.timestamp > escrow.expiresAt && escrow.status != EscrowStatus.Disputed) {
+            escrow.status = EscrowStatus.Expired;
+        }
 
         if (_msgSender() == escrow.seller) {
             escrow.sellerConfirmed = true;
@@ -301,6 +313,44 @@ contract EscrowContract is
         if (escrow.sellerConfirmed && escrow.buyerConfirmed) {
             _releaseFunds(_invoiceId);
         }
+    }
+
+    /**
+     * @notice Allows buyer to reclaim funds from an expired, funded escrow
+     * @param _invoiceId The invoice ID of the expired escrow
+     * @dev Can only be called after expiration and if escrow is still funded
+     */
+    function reclaimExpiredFunds(bytes32 _invoiceId) external nonReentrant {
+        Escrow storage escrow = escrows[_invoiceId];
+        
+        require(_msgSender() == escrow.buyer, "Not buyer");
+        require(escrow.status == EscrowStatus.Funded || escrow.status == EscrowStatus.Expired, "Invalid status");
+        require(block.timestamp > escrow.expiresAt, "Not expired yet");
+        
+        uint256 reclaimAmount = escrow.amount;
+        address buyer = escrow.buyer;
+        address token = escrow.token;
+        
+        // Update status before transfer (CEI pattern)
+        escrow.status = EscrowStatus.Expired;
+        
+        // Return funds to buyer
+        if (token == address(0)) {
+            payable(buyer).transfer(reclaimAmount);
+        } else {
+            IERC20(token).safeTransfer(buyer, reclaimAmount);
+        }
+        
+        // Return NFT collateral to seller if exists
+        if (escrow.rwaNftContract != address(0)) {
+            IERC721(escrow.rwaNftContract).safeTransferFrom(
+                address(this),
+                escrow.seller,
+                escrow.rwaTokenId
+            );
+        }
+        
+        emit EscrowExpired(_invoiceId, buyer, reclaimAmount);
     }
 
     function raiseDispute(bytes32 invoiceId) external {
