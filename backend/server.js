@@ -22,6 +22,7 @@ const listenForTokenization = require("./listeners/contractListener");
 const startComplianceListeners = require("./listeners/complianceListener");
 const testDbConnection = require("./utils/testDbConnection");
 const { startSyncWorker } = require("./services/escrowSyncService");
+const { startScheduledReconciliation } = require("./services/reconciliationService");
 
 const app = express();
 const server = http.createServer(app);
@@ -47,17 +48,18 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   : ["http://localhost:5173"];
 
 const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin && process.env.NODE_ENV !== "production") {
-      return callback(null, true);
-    }
+  // origin: (origin, callback) => {
+  //   if (!origin && process.env.NODE_ENV !== "production") {
+  //     return callback(null, true);
+  //   }
 
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+  //   if (allowedOrigins.includes(origin)) {
+  //     return callback(null, true);
+  //   }
 
-    return callback(new Error("Not allowed by CORS"));
-  },
+  //   return callback(new Error("Not allowed by CORS"));
+  // },
+  origin: "http://localhost:5173",
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
   credentials: true,
   optionsSuccessStatus: 204,
@@ -87,6 +89,13 @@ app.use("/api/health", require("./routes/health"));
 app.use("/api/auth", authLimiter, require("./routes/auth"));
 app.use("/api/invoices", require("./routes/invoice"));
 app.use("/api/payments", paymentLimiter, require("./routes/payment"));
+
+/* ---------------- ESCROW ---------------- */
+
+app.use("/api/escrow", require("./routes/escrow"));
+
+/* ---------------- ADMIN ---------------- */
+
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/kyc", kycLimiter, require("./routes/kyc"));
 app.use("/api/produce", require("./routes/produce"));
@@ -112,6 +121,10 @@ app.use("/api/auctions", require("./routes/auction"));
 
 app.use('/api/analytics', require('./routes/analytics'));
 
+/* ---------------- RECONCILIATION ---------------- */
+
+app.use('/api/reconciliation', require('./routes/reconciliation'));
+
 /* ---------------- CURRENCIES ---------------- */
 
 app.use('/api/currencies', require('./routes/currency'));
@@ -119,6 +132,10 @@ app.use('/api/currencies', require('./routes/currency'));
 /* ---------------- CREDIT SCORES ---------------- */
 
 app.use('/api/credit-scores', require('./routes/creditScore'));
+
+/* ---------------- INSURANCE ---------------- */
+
+app.use('/api/insurance', require('./routes/insurance'));
 
 /* ---------------- FIAT ON-RAMP ---------------- */
 
@@ -235,6 +252,17 @@ try {
 } catch (err) {
   console.error(
     "[server] Compliance listeners failed:",
+    err?.message || err
+  );
+}
+
+// Start scheduled reconciliation (every 6 hours)
+try {
+  startScheduledReconciliation();
+  console.log("[Server] Reconciliation scheduler started");
+} catch (err) {
+  console.error(
+    "[server] Reconciliation scheduler failed:",
     err?.message || err
   );
 }

@@ -625,6 +625,7 @@ const FinancingTabComponent = () => (
       case 'escrow': return <EscrowTab />;
       case 'financing': return <FinancingTabComponent />;
       case 'streaming': return <StreamingTabComponent />;
+      case 'analytics': return <AnalyticsPage activeTab={activeTab} />;
       default: return <OverviewTab />;
     }
   };

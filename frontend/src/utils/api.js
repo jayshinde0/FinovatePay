@@ -331,6 +331,23 @@ export const raiseDispute = (invoiceId, reason) => {
   return api.post('/payments/escrow/dispute', { invoiceId, reason });
 };
 
+// --- Multi-Signature Escrow API ---
+
+// Add multi-signature approval for an escrow
+export const approveMultiSig = (invoiceId) => {
+  return api.post(`/escrow/${invoiceId}/approve`);
+};
+
+// Get multi-signature approval status for an escrow
+export const getMultiSigApprovals = (invoiceId) => {
+  return api.get(`/escrow/${invoiceId}/approvals`);
+};
+
+// Get full escrow status including multi-sig details
+export const getEscrowStatus = (invoiceId) => {
+  return api.get(`/escrow/${invoiceId}/status`);
+};
+
 // --- KYC API ---
 export const verifyKYC = (userData) => {
   return api.post('/kyc/verify', userData);
@@ -508,5 +525,57 @@ export const getInvoiceRisk = (invoiceId) => {
 
 // Alias for getInvoiceRisk used by AnalyticsDashboard
 export const getRiskScore = getInvoiceRisk;
+
+// --- Insurance API ---
+
+// Get insurance configuration
+export const getInsuranceConfig = () => {
+  return api.get('/insurance/config');
+};
+
+// Calculate premium for given coverage and duration
+export const calculateInsurancePremium = (coverageAmount, durationSeconds) => {
+  return api.get('/insurance/calculate-premium', { params: { coverageAmount, durationSeconds } });
+};
+
+// Purchase insurance for an escrow
+export const purchaseInsurance = (data) => {
+  return api.post('/insurance/purchase', data);
+};
+
+// Get user's insurance policies
+export const getInsurancePolicies = () => {
+  return api.get('/insurance/policies');
+};
+
+// Get specific policy details
+export const getInsurancePolicy = (policyId) => {
+  return api.get(`/insurance/policy/${policyId}`);
+};
+
+// Get insurance policies for an invoice
+export const getInvoiceInsurance = (invoiceId) => {
+  return api.get(`/insurance/invoice/${invoiceId}`);
+};
+
+// File a claim on an insurance policy
+export const fileInsuranceClaim = (data) => {
+  return api.post('/insurance/claim', data);
+};
+
+// Approve a claim (admin only)
+export const approveInsuranceClaim = (data) => {
+  return api.post('/insurance/approve-claim', data);
+};
+
+// Get insurance statistics (admin only)
+export const getInsuranceStats = () => {
+  return api.get('/insurance/stats');
+};
+
+// Get all pending claims (admin only)
+export const getPendingClaims = () => {
+  return api.get('/insurance/claims');
+};
 
 export default api;
