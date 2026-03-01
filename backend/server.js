@@ -132,6 +132,10 @@ app.use('/api/currencies', require('./routes/currency'));
 
 app.use('/api/credit-scores', require('./routes/creditScore'));
 
+/* ---------------- INSURANCE ---------------- */
+
+app.use('/api/insurance', require('./routes/insurance'));
+
 /* ---------------- FIAT ON-RAMP ---------------- */
 
 app.use("/api/fiat-ramp", require("./routes/fiatRamp"));
