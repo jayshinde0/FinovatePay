@@ -9,6 +9,8 @@ const sanitizeUser = (user) => {
   return sanitizedUser;
 };
 
+// Valid user roles
+const VALID_ROLES = ['buyer', 'seller', 'arbitrator', 'investor'];
 
 // Valid user roles
 const VALID_ROLES = ['buyer', 'seller', 'arbitrator', 'investor'];
@@ -24,11 +26,10 @@ exports.register = async (req, res) => {
 
     // 3. Check if user already exists
     const userCheck = await pool.query(
-      'SELECT * FROM users WHERE email = $1 OR wallet_address = $2', 
+      'SELECT * FROM users WHERE email = $1 OR wallet_address = $2',
       [email, walletAddress]
     );
 
-    
     if (userCheck.rows.length > 0) {
       return errorResponse(res, 'User already exists with this Email or Wallet', 400);
     }
@@ -47,8 +48,8 @@ exports.register = async (req, res) => {
 
     // 6. Create Login Token
     const token = jwt.sign(
-      { id: newUser.rows[0].id, role: newUser.rows[0].role }, 
-      process.env.JWT_SECRET, 
+      { id: newUser.rows[0].id, role: newUser.rows[0].role },
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -57,12 +58,12 @@ exports.register = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
+      maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
     });
 
     res.json({ user: sanitizeUser(newUser.rows[0]), token });
   } catch (err) {
-    console.error("❌ Registration Error:", err.message);
+    console.error('❌ Registration Error:', err.message);
     return errorResponse(res, 'Server error during registration', 500);
   }
 };
@@ -86,8 +87,8 @@ exports.login = async (req, res) => {
 
     // 3. Create and set token in HttpOnly cookie
     const token = jwt.sign(
-      { id: user.rows[0].id, role: user.rows[0].role }, 
-      process.env.JWT_SECRET, 
+      { id: user.rows[0].id, role: user.rows[0].role },
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -96,12 +97,12 @@ exports.login = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
+      maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
     });
 
     res.json({ user: sanitizeUser(user.rows[0]), token });
   } catch (err) {
-    console.error("❌ Login Error:", err.message);
+    console.error('❌ Login Error:', err.message);
     return errorResponse(res, 'Server error', 500);
   }
 };
