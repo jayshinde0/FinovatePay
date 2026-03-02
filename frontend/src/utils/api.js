@@ -109,7 +109,8 @@ api.interceptors.response.use(
           console.error('Logout request failed:', logoutError);
         }
         
-        // Clear user data from localStorage
+        // Clear all authentication tokens and user data from localStorage
+        localStorage.removeItem('token');
         localStorage.removeItem('user');
         
         // Use React Router navigation if available, fallback to hard redirect
@@ -239,8 +240,20 @@ export const register = (userData) => {
   return api.post('/auth/register', userData);
 };
 
-export const logout = () => {
-  return api.post('/auth/logout');
+export const logout = async () => {
+  try {
+    // Call logout endpoint to clear server-side sessions/cookies
+    await api.post('/auth/logout');
+  } catch (error) {
+    // Continue with local cleanup even if server logout fails
+    console.error('Server logout failed:', error);
+  } finally {
+    // Always clear ALL authentication data from localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    console.log('[AUTH] User logged out - all tokens cleared from localStorage');
+  }
 };
 
 export const updateCurrentUserRole = (role) => {
