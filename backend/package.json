@@ -23,6 +23,7 @@
     "@truffle/hdwallet-provider": "^2.1.15",
     "axios": "^1.11.0",
     "bcryptjs": "^3.0.3",
+    "chalk": "^4.1.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.4",
@@ -43,10 +44,10 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10",
     "chai": "^4.3.10",
     "jest": "^30.2.0",
     "mocha": "^10.2.0",
+    "nodemon": "^3.1.10",
     "supertest": "^7.2.2"
   },
   "engines": {
