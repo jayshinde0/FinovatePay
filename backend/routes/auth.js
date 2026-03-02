@@ -171,15 +171,12 @@ router.get('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Logout - clears the HttpOnly cookie server-side
+// Logout - client-side token removal (localStorage)
+// Note: This app uses localStorage for token storage, not HttpOnly cookies
+// The frontend is responsible for removing the token from localStorage
 router.post('/logout', (req, res) => {
-  // Clear the HttpOnly cookie by setting maxAge to 0
-  res.cookie('token', '', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 0 // Expire immediately
-  });
+  // Server-side logout logic can be added here if needed
+  // (e.g., token blacklisting, session invalidation)
   res.json({ message: 'Logout successful' });
 });
 
