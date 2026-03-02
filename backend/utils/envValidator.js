@@ -201,8 +201,15 @@ function validateEnvironment() {
 
 /**
  * Validates environment and exits if critical errors found
+ * Skips validation in test/CI environments
  */
 function validateAndExit() {
+  // Skip validation in test/CI environments
+  if (process.env.NODE_ENV === 'test' || process.env.CI === 'true') {
+    console.log('⏭️  Skipping environment validation in test/CI environment\n');
+    return;
+  }
+
   const result = validateEnvironment();
 
   // Display warnings
