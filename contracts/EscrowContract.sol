@@ -656,12 +656,12 @@ contract EscrowContract is
 
         uint256 payoutAmount = amount;
         if (fee > 0) {
-            IERC20(e.token).safeTransfer(treasury, fee);
+            _payout(treasury, e.token, fee);
             emit FeeCollected(invoiceId, fee);
             payoutAmount -= fee;
         }
 
-        IERC20(e.token).safeTransfer(sellerWins ? seller : buyer, payoutAmount);
+        _payout(sellerWins ? seller : buyer, e.token, payoutAmount);
 
 
         // Transfer NFT to winner

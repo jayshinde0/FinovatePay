@@ -12,6 +12,9 @@ const sanitizeUser = (user) => {
 // Valid user roles
 const VALID_ROLES = ['buyer', 'seller', 'arbitrator', 'investor'];
 
+// Valid user roles
+const VALID_ROLES = ['buyer', 'seller', 'arbitrator', 'investor'];
+
 // --- REGISTER USER ---
 exports.register = async (req, res) => {
   // 1. Get data from the form
@@ -58,8 +61,7 @@ exports.register = async (req, res) => {
       maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
     });
 
-    // Sanitize user object before sending response (remove password)
-    res.json({ user: sanitizeUser(newUser.rows[0]) });
+    res.json({ user: sanitizeUser(newUser.rows[0]), token });
   } catch (err) {
     console.error('❌ Registration Error:', err.message);
     return errorResponse(res, 'Server error during registration', 500);
@@ -98,8 +100,7 @@ exports.login = async (req, res) => {
       maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
     });
 
-    // Sanitize user object before sending response (remove password)
-    res.json({ user: sanitizeUser(user.rows[0]) });
+    res.json({ user: sanitizeUser(user.rows[0]), token });
   } catch (err) {
     console.error('❌ Login Error:', err.message);
     return errorResponse(res, 'Server error', 500);
