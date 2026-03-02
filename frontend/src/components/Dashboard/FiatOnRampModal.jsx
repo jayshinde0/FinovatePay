@@ -158,8 +158,11 @@ const FiatOnRampModal = ({ onClose, onSuccess, walletAddress }) => {
             console.error('Payment initialization failed:', error);
             const errorMessage = error.response?.data?.error || "Payment connection failed. Please try again.";
             toast.error(errorMessage);
-        } finally {
             setIsProcessing(false);
+        } finally {
+            if (provider !== 'transak') {
+                setIsProcessing(false);
+            }
         }
     };
 
@@ -298,7 +301,7 @@ const FiatOnRampModal = ({ onClose, onSuccess, walletAddress }) => {
                             </span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Processing Fee ({provider === 'transak' ? '3.5%' : '1.49%'})</span>
+                            <span className="text-gray-500">Processing Fee ({provider === 'transak' ? '3.5%' : provider === 'moonpay' ? '1.49%' : '1.5%'})</span>
                             <span className="font-medium text-gray-700">{fees.toFixed(2)} {currency}</span>
                         </div>
                         <div className="border-t border-gray-200 my-2"></div>
