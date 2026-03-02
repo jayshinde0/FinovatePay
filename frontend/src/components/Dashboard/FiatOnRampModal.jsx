@@ -97,7 +97,9 @@ const FiatOnRampModal = ({ onClose, onSuccess, walletAddress }) => {
                 transak.init();
 
                 transak.on(transak.EVENTS.TRANSAK_ORDER_SUCCESSFUL, (orderData) => {
-                    console.log(orderData);
+                    if (import.meta.env.DEV) {
+                        console.log('Transak order successful:', { orderId: orderData?.id });
+                    }
                     transak.close();
                     toast.success("Payment successful via Transak!");
                     if (onSuccess) onSuccess(parseFloat(amount));
