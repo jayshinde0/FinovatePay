@@ -296,7 +296,7 @@ const FiatOnRampModal = ({ onClose, onSuccess, walletAddress }) => {
                             </span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Processing Fee ({provider === 'transak' ? 'Variable' : '1.5%'})</span>
+                            <span className="text-gray-500">Processing Fee ({provider === 'transak' ? '3.5%' : '1.49%'})</span>
                             <span className="font-medium text-gray-700">{fees.toFixed(2)} {currency}</span>
                         </div>
                         <div className="border-t border-gray-200 my-2"></div>
